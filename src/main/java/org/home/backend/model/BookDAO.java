@@ -17,7 +17,7 @@ public class BookDAO {
     private String title;
     private Integer year;
     private String author;
-    private Integer sage;
+    private Integer sageId;
     private Integer orderSage;
     private Integer fileYear;
     private Boolean digital;

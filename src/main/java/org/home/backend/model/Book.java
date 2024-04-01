@@ -50,8 +50,8 @@ public class Book {
         this.year = bookDAO.getYear();
         this.author = bookDAO.getAuthor();
         BookSage sageDAO = null;
-        if(bookDAO.getSage() != null) {
-            sageDAO = new BookSage(bookDAO.getSage());
+        if(bookDAO.getSageId() != null && bookDAO.getSageId() != 0) {
+            sageDAO = new BookSage(bookDAO.getSageId());
         }
         this.sage = sageDAO;
         this.orderSage = bookDAO.getOrderSage();

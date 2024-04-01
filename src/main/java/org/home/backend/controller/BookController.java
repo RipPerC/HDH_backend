@@ -43,7 +43,7 @@ public class BookController {
 
     @GetMapping("/book/{id}")
     public ResponseEntity<Book> getById(@PathVariable("id") long id){
-        
+
         try {
 
             Book book = bookService.getBookById(id);
