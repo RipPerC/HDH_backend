@@ -2,6 +2,8 @@
 
 REST API for the HdH catalog, built with Java 21, Spring Boot 4.1.0, Spring MVC, Spring Data JPA, and PostgreSQL.
 
+For repository architecture, development commands, and contributor guidance, see [AGENTS.md](AGENTS.md).
+
 ## Architecture
 
 The backend is a modular monolith. Features are grouped under `org.home.backend.catalog`; the film feature separates its web adapter, application service and output port from its Spring Data persistence adapter. Series and episode entities and repositories live in the series module. The application depends on persistence through the `FilmStore` port, not directly on Spring Data.
