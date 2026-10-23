@@ -110,7 +110,7 @@ An empty film list remains `204 No Content`; a film lookup or deletion for a mis
 
 ### Postman collection
 
-Import [`postman/HDH Backend.postman_collection.json`](postman/HDH%20Backend.postman_collection.json) into Postman. Set `baseUrl` and `frontendOrigin`, then set `accessToken` to a valid access token from the configured test identity provider. The collection includes unauthenticated and invalid/expired token checks, CRUD requests, HTTP error cases, public health, and a CORS preflight request. Set `expiredToken` to an expired token issued by that provider to run the expiration case. Run the CRUD requests in order: creating a film stores its ID for the later get, update, and delete requests. The collection includes assertions for expected status codes and Problem Details responses.
+Import [`docs/HDH Backend.postman_collection.json`](docs/HDH%20Backend.postman_collection.json) into Postman. Set `baseUrl` and `frontendOrigin`, then set `accessToken` to a valid access token from the configured test identity provider. The collection includes unauthenticated and invalid/expired token checks, CRUD requests, HTTP error cases, public health, and a CORS preflight request. Set `expiredToken` to an expired token issued by that provider to run the expiration case. Run the CRUD requests in order: creating a film stores its ID for the later get, update, and delete requests. The collection includes assertions for expected status codes and Problem Details responses.
 
 The API currently has no role-protected endpoint, so a 403 authorization decision is covered by automated tests for the configured forbidden-response handler rather than a Postman request.
 

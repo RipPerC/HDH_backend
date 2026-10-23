@@ -56,7 +56,7 @@ The film API is rooted at `/v1`:
 
 All `/v1/**` requests require a valid JWT bearer token. Configure `OIDC_ISSUER_URI`, `OIDC_JWKS_URI`, and `OIDC_AUDIENCE`; browser origins are controlled by `APP_CORS_ALLOWED_ORIGINS`. Errors use RFC 9457 Problem Details for 400, 401, 403, 404, 405, 415, and 500. Missing films return 404; an empty list remains 204. CORS is not an authentication mechanism.
 
-The Postman collection is `postman/HDH Backend.postman_collection.json`. Security and MVC tests can run without PostgreSQL or an OIDC provider with `.\mvnw.cmd -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`.
+The Postman collection is `docs/HDH Backend.postman_collection.json`. Security and MVC tests can run without PostgreSQL or an OIDC provider with `.\mvnw.cmd -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`.
 
 The series and episode repositories are persistence-only at present; do not document them as public endpoints unless controllers are added.
 
