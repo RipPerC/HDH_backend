@@ -1,4 +1,4 @@
-package org.home.backend.model;
+package org.home.backend.catalog.film.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,10 +13,11 @@ import java.util.Date;
 @ToString
 @Entity
 @Table(name="FILM", schema = "DATA")
+@SequenceGenerator(name = "film_id_sequence", sequenceName = "data.film_id_seq", allocationSize = 1)
 public class Film {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "film_id_sequence")
     private long id;
     @Column(name = "TITLE")
     private String title;

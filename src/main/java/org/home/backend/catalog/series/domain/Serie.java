@@ -1,4 +1,4 @@
-package org.home.backend.model;
+package org.home.backend.catalog.series.domain;
 
 import jakarta.persistence.*;
 
@@ -6,10 +6,11 @@ import java.util.Set;
 
 @Entity
 @Table(name="SERIE", schema = "DATA")
+@SequenceGenerator(name = "serie_id_sequence", sequenceName = "data.serie_id_seq", allocationSize = 1)
 public class Serie {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "serie_id_sequence")
     private long id;
     @Column(name = "TITLE")
     private String title;
