@@ -116,10 +116,10 @@ The API currently has no role-protected endpoint, so a 403 authorization decisio
 
 ### Automated tests
 
-The security and HTTP behavior tests use a mocked JWT decoder and do not need a live identity provider or database:
+The tests require Docker to be running. `BackendApplicationTests` starts a disposable PostgreSQL 17 container with Testcontainers, runs the application context and Flyway migrations against it, then removes the container when the test class finishes. No local PostgreSQL setup or OIDC provider is needed:
 
 ```shell
-./mvnw -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test
+./mvnw test
 ```
 
-The full application-context test still requires PostgreSQL configured as described above.
+The security and HTTP behavior tests use a mocked JWT decoder and do not need the PostgreSQL container; run only those with `./mvnw -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`.

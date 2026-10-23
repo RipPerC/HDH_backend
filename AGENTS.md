@@ -69,7 +69,7 @@ Use the Maven wrapper so the project uses its configured Maven version:
 - Unix-like build: `./mvnw -DskipTests package`
 - Unix-like tests: `./mvnw test`
 
-The test suite starts the Spring application context. Database-dependent tests require PostgreSQL configured through the environment variables documented in `README.md`.
+The test suite starts the Spring application context. `BackendApplicationTests` uses Testcontainers to create and remove an isolated PostgreSQL 17 database; Docker must be running for `.\mvnw.cmd test`. Security-only tests can run without Docker using `.\mvnw.cmd -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`.
 
 ## Data and configuration
 
