@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.home</groupId>
-    <artifactId>backend</artifactId>
+    <artifactId>HDH_backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>HDH_backend</name>
