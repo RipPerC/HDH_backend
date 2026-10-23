@@ -83,6 +83,7 @@ The test suite starts the Spring application context. `BackendApplicationTests` 
 
 ## Change guidance
 
+- Write all agent-produced work and artifacts in English. This includes repository changes, documentation, plans, pull request titles and descriptions, review comments, issue content, and commit messages. Only direct conversations with the user may be in Spanish.
 - Read the existing feature and its tests before changing behavior; add or update tests for behavior changes.
 - Keep changes scoped to the requested feature and preserve established package naming and formatting.
 - Update `README.md` when developer setup, configuration, or public API behavior changes.
