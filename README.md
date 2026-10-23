@@ -27,8 +27,13 @@ Database and server settings are supplied through environment variables:
 | `DB_USERNAME` | `hdh_user` | Database user |
 | `DB_PASSWORD` | empty | Database password |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:4200` | Comma-separated browser origins allowed by CORS |
+| `OIDC_ISSUER_URI` | required | JWT issuer URI configured by the identity provider |
+| `OIDC_JWKS_URI` | required | Provider JWKS endpoint used to verify JWT signatures |
+| `OIDC_AUDIENCE` | required | Audience claim expected in API access tokens |
 
 Do not use the empty password default outside a local environment. Database schema changes are managed by Flyway migrations in `src/main/resources/db/migration`; Hibernate validates the schema at startup and does not modify it. For an existing `data` schema without Flyway history, startup baselines it and applies the initial idempotent migration, including sequences aligned to existing IDs.
+
+The OIDC values in `env/dev/.env` are examples only; replace them with values for a configured identity provider before using protected endpoints. The backend does not issue tokens or manage user accounts. Angular is a public client and must use OAuth 2.0 / OpenID Connect Authorization Code with PKCE; never put a client secret in browser code. After login, send the access token in `Authorization: Bearer <access-token>`. CORS only controls browser cross-origin access; it does not authenticate callers.
 
 ## Run with Docker Compose
 
@@ -41,6 +46,8 @@ docker compose --env-file env/dev/.env up --build -d
 ```
 
 The backend is available at `http://localhost:8089`; its health endpoint is `http://localhost:8089/actuator/health`. Compose waits for PostgreSQL before starting the backend and persists database data in the `postgres-data` volume.
+
+Set `OIDC_ISSUER_URI`, `OIDC_JWKS_URI`, and `OIDC_AUDIENCE` in the Compose environment before starting the backend. The health endpoint remains public; all other API paths require a signed, unexpired token with the configured issuer and audience.
 
 To include Angular, first build its image separately and set `FRONTEND_IMAGE` in `.env` to that image. The frontend image must serve its static application on port 80 and be configured so the browser can reach the API at `http://localhost:8089/v1`. Then start the frontend profile:
 
@@ -74,3 +81,45 @@ The existing film API remains under `/v1`:
 - `GET /v1/film/{id}`
 - `POST /v1/film`
 - `DELETE /v1/film/{id}`
+
+Every `/v1/**` endpoint requires a valid JWT access token. The API returns `application/problem+json` Problem Details (RFC 9457) for errors:
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Malformed or invalid request |
+| 401 | Missing, invalid, or expired access token |
+| 403 | Authenticated caller is forbidden |
+| 404 | Route or requested film does not exist |
+| 405 | HTTP method is not supported for the route |
+| 415 | Request media type is not supported |
+| 500 | Unexpected server error; internal details are not exposed |
+
+Example:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "The requested resource was not found.",
+  "instance": "/v1/film/42"
+}
+```
+
+An empty film list remains `204 No Content`; a film lookup or deletion for a missing ID returns `404`.
+
+### Postman collection
+
+Import [`postman/HDH Backend.postman_collection.json`](postman/HDH%20Backend.postman_collection.json) into Postman. Set `baseUrl` and `frontendOrigin`, then set `accessToken` to a valid access token from the configured test identity provider. The collection includes unauthenticated and invalid/expired token checks, CRUD requests, HTTP error cases, public health, and a CORS preflight request. Set `expiredToken` to an expired token issued by that provider to run the expiration case. Run the CRUD requests in order: creating a film stores its ID for the later get, update, and delete requests. The collection includes assertions for expected status codes and Problem Details responses.
+
+The API currently has no role-protected endpoint, so a 403 authorization decision is covered by automated tests for the configured forbidden-response handler rather than a Postman request.
+
+### Automated tests
+
+The security and HTTP behavior tests use a mocked JWT decoder and do not need a live identity provider or database:
+
+```shell
+./mvnw -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test
+```
+
+The full application-context test still requires PostgreSQL configured as described above.

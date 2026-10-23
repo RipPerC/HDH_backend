@@ -24,6 +24,7 @@ public class WebConfigurer implements WebMvcConfigurer {
                         .filter(origin -> !origin.isEmpty())
                         .toArray(String[]::new))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("Authorization", "Content-Type")
+                .allowCredentials(false);
     }
 }

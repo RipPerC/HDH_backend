@@ -1,0 +1,497 @@
+{
+  "info": {
+    "_postman_id": "d67c8e87-fac7-41b0-bcc6-6d4376803c34",
+    "name": "HDH Backend",
+    "description": "Pruebas manuales del API protegido. Configura los tokens de un proveedor OIDC de prueba en las variables de la colección antes de ejecutar los casos autenticados.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health pública (sin token)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Health responde 200 y estado UP', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Películas - CRUD",
+      "item": [
+        {
+          "name": "Listar películas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La lista devuelve 200 o 204 si está vacía', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('El cuerpo es una lista', function () {",
+                  "        pm.expect(pm.response.json()).to.be.an('array');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear película",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('testTitle', 'Postman test ' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La creación responde 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const film = pm.response.json();",
+                  "pm.test('La respuesta contiene un ID', function () {",
+                  "    pm.expect(film.id).to.be.a('number').and.above(0);",
+                  "});",
+                  "pm.collectionVariables.set('filmId', String(film.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 0,\n  \"title\": \"{{testTitle}}\",\n  \"director\": \"Postman\",\n  \"year\": 2024,\n  \"audio\": \"en\",\n  \"subtitle\": \"es\",\n  \"format\": \"digital\",\n  \"downloaded\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/v1/film"
+          }
+        },
+        {
+          "name": "Obtener película creada",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film/{{filmId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La película responde 200 y coincide con el ID', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(String(pm.response.json().id)).to.eql(pm.collectionVariables.get('filmId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar película creada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{filmId}},\n  \"title\": \"{{testTitle}} updated\",\n  \"director\": \"Postman\",\n  \"year\": 2024,\n  \"audio\": \"en\",\n  \"subtitle\": \"es\",\n  \"format\": \"digital\",\n  \"downloaded\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La actualización responde 202 y conserva el ID', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "    pm.expect(String(pm.response.json().id)).to.eql(pm.collectionVariables.get('filmId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar película creada",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/film/{{filmId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La eliminación responde 202', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autenticación y errores",
+      "item": [
+        {
+          "name": "Sin token: espera 401 Problem Details",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token inválido: espera 401 Problem Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{invalidToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Token inválido responde 401 Problem Details', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token expirado: espera 401 Problem Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{expiredToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Token expirado responde 401 Problem Details', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Película inexistente: espera 404 Problem Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/film/9223372036854775807"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ruta inexistente: espera 404 Problem Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/not-a-route"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON malformado: espera 400 Problem Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{"
+            },
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Método no permitido: espera 405 Problem Details",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('405 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(405);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(405);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Media type no soportado: espera 415 Problem Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "film"
+            },
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('415 con cuerpo Problem Details', function () {",
+                  "    pm.response.to.have.status(415);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    pm.expect(pm.response.json().status).to.eql(415);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preflight CORS desde Angular",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{frontendOrigin}}"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              },
+              {
+                "key": "Access-Control-Request-Headers",
+                "value": "authorization"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/film"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CORS permite el origen frontend y Authorization', function () {",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql(pm.collectionVariables.get('frontendOrigin'));",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Headers').toLowerCase()).to.include('authorization');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8089"
+    },
+    {
+      "key": "frontendOrigin",
+      "value": "http://localhost:4200"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "invalidToken",
+      "value": "not-a-valid-token"
+    },
+    {
+      "key": "expiredToken",
+      "value": ""
+    },
+    {
+      "key": "filmId",
+      "value": ""
+    },
+    {
+      "key": "testTitle",
+      "value": ""
+    }
+  ]
+}
