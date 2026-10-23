@@ -16,6 +16,34 @@ HdH Backend is a Java 21 / Spring Boot REST API for a film and series catalog. I
 
 Keep feature code within its module. For new web behavior, follow the existing film feature's adapter/application/port/persistence separation where appropriate; do not make application services depend directly on Spring Data repositories.
 
+## Architectural pattern and request flow
+
+The repository is a **modular monolith**. Within the film feature, the code follows a **ports-and-adapters (hexagonal) pattern**:
+
+- The inbound web adapter (`FilmController`) translates HTTP requests into calls to the application service.
+- The application layer (`FilmService`) contains film use-case behavior and depends on the `FilmStore` output port, not on a database technology.
+- The outbound persistence adapter (`FilmPersistenceAdapter`) implements `FilmStore` and delegates storage operations to the Spring Data `FilmJpaRepository`.
+- The repository uses the `Film` JPA entity to read and write PostgreSQL data.
+
+Typical film request and response flow:
+
+```mermaid
+flowchart LR
+    Client[HTTP client] -->|Request /v1/film| Controller[FilmController<br/>Inbound web adapter]
+    Controller -->|Call use case| Service[FilmService<br/>Application layer]
+    Service -->|FilmStore port| Port[FilmStore]
+    Port --> Adapter[FilmPersistenceAdapter<br/>Outbound persistence adapter]
+    Adapter --> Jpa[FilmJpaRepository<br/>Spring Data JPA]
+    Jpa -->|Read / write Film entity| DB[(PostgreSQL<br/>data schema)]
+    DB --> Jpa
+    Jpa --> Adapter
+    Adapter --> Service
+    Service --> Controller
+    Controller -->|HTTP response| Client
+```
+
+The `FilmStore` interface is the boundary that keeps application behavior independent of Spring Data. Preserve this direction when extending the film feature. The series module currently has entities and repositories only, so the film request flow does not apply to series or episodes until application and web layers are introduced.
+
 ## Existing HTTP API
 
 The film API is rooted at `/v1`:
