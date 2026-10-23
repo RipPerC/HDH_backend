@@ -86,4 +86,5 @@ The test suite starts the Spring application context. `BackendApplicationTests` 
 - Read the existing feature and its tests before changing behavior; add or update tests for behavior changes.
 - Keep changes scoped to the requested feature and preserve established package naming and formatting.
 - Update `README.md` when developer setup, configuration, or public API behavior changes.
+- When creating an implementation plan for repository work, add it under `docs/plan/` using `YYYY-MM-DD-short-task.md`; use a title starting with the date and a concise task summary. Record the scope, implementation decisions, tests, and validation results; update the plan if implementation changes materially.
 - Do not add frontend code to this repository; it is a separate application.
