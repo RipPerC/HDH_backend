@@ -1,14 +1,13 @@
-package org.home.backend.controller;
+package org.home.backend.catalog.film.adapter.in.web;
 
-import org.home.backend.model.Film;
-import org.home.backend.service.FilmService;
+import org.home.backend.catalog.film.application.FilmService;
+import org.home.backend.catalog.film.domain.Film;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-@CrossOrigin
 @RestController
 @RequestMapping("/v1")
 public class FilmController {
@@ -32,7 +31,7 @@ public class FilmController {
 
             return new ResponseEntity<>(films, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.<List<Film>>status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -49,14 +48,12 @@ public class FilmController {
 
             return new ResponseEntity<>(film, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.<Film>status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PostMapping("/film")
     public ResponseEntity<Film> createFilm(@RequestBody Film film) {
-        formattingFilm(film);
-
         boolean newFilm = film.getId() == 0;
 
         try {
@@ -68,25 +65,7 @@ public class FilmController {
                 return new ResponseEntity<>(film, HttpStatus.ACCEPTED);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private void formattingFilm(Film film) {
-        if(film.getDownloaded() == null) {
-            film.setDownloaded(false);
-        }
-
-        if (film.getAudio() != null) {
-            film.setAudio(film.getAudio().toUpperCase());
-        }
-
-        if (film.getSubtitle() != null) {
-            film.setSubtitle(film.getSubtitle().toUpperCase());
-        }
-
-        if (film.getFormat() != null) {
-            film.setFormat(film.getFormat().toLowerCase());
+            return ResponseEntity.<Film>status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -102,4 +81,3 @@ public class FilmController {
         }
     }
 }
-

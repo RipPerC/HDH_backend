@@ -1,13 +1,14 @@
-package org.home.backend.model;
+package org.home.backend.catalog.series.domain;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name="EPISODE", schema = "DATA")
+@SequenceGenerator(name = "episode_id_sequence", sequenceName = "data.episode_id_seq", allocationSize = 1)
 public class Episode {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "episode_id_sequence")
     private long id;
     @ManyToOne
     @JoinColumn(name = "FK_SERIE", nullable = false)
