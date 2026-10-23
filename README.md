@@ -30,16 +30,12 @@ Do not use the empty password default outside a local environment. Database sche
 
 ## Run with Docker Compose
 
-Create a local `.env` from `.env.example` and replace the sample password:
-
-```powershell
-Copy-Item .env.example .env
-```
+The repository includes `env/dev/.env` for local development. Its password is a placeholder for local use only; replace it with a private value if needed and never reuse it outside a local environment.
 
 Build the executable JAR into the backend image and start it with PostgreSQL:
 
 ```shell
-docker compose up --build -d
+docker compose --env-file env/dev/.env up --build -d
 ```
 
 The backend is available at `http://localhost:8089`; its health endpoint is `http://localhost:8089/actuator/health`. Compose waits for PostgreSQL before starting the backend and persists database data in the `postgres-data` volume.
@@ -47,7 +43,7 @@ The backend is available at `http://localhost:8089`; its health endpoint is `htt
 To include Angular, first build its image separately and set `FRONTEND_IMAGE` in `.env` to that image. The frontend image must serve its static application on port 80 and be configured so the browser can reach the API at `http://localhost:8089/v1`. Then start the frontend profile:
 
 ```shell
-docker compose --profile frontend up --build -d
+docker compose --env-file env/dev/.env --profile frontend up --build -d
 ```
 
 By default the frontend is published on `http://localhost:4200`, which is the default allowed CORS origin. For a different public origin, set `APP_CORS_ALLOWED_ORIGINS` in `.env` to that browser origin. The Compose frontend profile uses an already-built Angular image because this repository does not contain the frontend source or its Dockerfile.
@@ -55,7 +51,7 @@ By default the frontend is published on `http://localhost:4200`, which is the de
 Stop the services while retaining database data:
 
 ```shell
-docker compose down
+docker compose --env-file env/dev/.env down
 ```
 
 ## Build the backend
