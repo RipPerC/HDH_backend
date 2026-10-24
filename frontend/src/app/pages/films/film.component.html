@@ -1,0 +1,131 @@
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <form class="form-horizontal p-t-20" [formGroup]="filmForm">
+          <div class="form-body">
+            <div class="row p-t-20">
+              <div class="col-2">
+                <div class="form-group">
+                  <label class="control-label">Year</label>
+                  <input
+                    type="number"
+                    min="1900"
+                    id="year"
+                    class="form-control"
+                    placeholder="Year"
+                    formControlName="year"
+                  />
+                </div>
+              </div>
+              <div class="col-md-7">
+                <div class="form-group">
+                  <label class="control-label">Title</label>
+                  <input
+                    type="text"
+                    id="title"
+                    class="form-control"
+                    placeholder="Title"
+                    formControlName="title"
+                  />
+                </div>
+              </div>
+              <!--/span-->
+
+              <!--/span-->
+            </div>
+            <!--/row-->
+            <div class="row">
+              <div class="col-1">
+                <div class="form-group">
+                  <label class="control-label">Downloaded</label>
+                  <select
+                    class="form-control custom-select"
+                    formControlName="downloaded"
+                  >
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </div>
+              </div>
+              <!--/span-->
+              <div class="col-1">
+                <div class="form-group">
+                  <label class="control-label">Audio</label>
+                  <input
+                    type="text"
+                    id="audio"
+                    class="form-control"
+                    placeholder="EN"
+                    maxlength="3"
+                    formControlName="audio"
+                  />
+                </div>
+              </div>
+              <!--/span-->
+              <div class="col-1">
+                <div class="form-group">
+                  <label class="control-label">Subtitle</label>
+                  <input
+                    type="text"
+                    id="subtitle"
+                    class="form-control"
+                    placeholder="EN"
+                    maxlength="3"
+                    formControlName="subtitle"
+                  />
+                </div>
+              </div>
+              <div class="col-1">
+                <div class="form-group">
+                  <label class="control-label">Format</label>
+                  <input
+                    type="text"
+                    id="format"
+                    class="form-control"
+                    placeholder="mp4"
+                    formControlName="format"
+                  />
+                </div>
+              </div>
+              <div class="col-md-5">
+                <div class="form-group">
+                  <label class="control-label">Director</label>
+                  <input
+                    type="text"
+                    id="director"
+                    class="form-control form-control-danger"
+                    placeholder="Director"
+                    formControlName="director"
+                  />
+                </div>
+              </div>
+            </div>
+            <!--/row-->
+          </div>
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-success"
+              [disabled]="filmForm.invalid"
+              (click)="saveFilm()"
+            >
+              <div *ngIf="filmForm.invalid"><i class="fa"></i> Save</div>
+              <div *ngIf="!filmForm.invalid">
+                <i class="fa fa-check"></i> Save
+              </div>
+            </button>
+            &nbsp;
+            <button
+              routerLink="/tecas/films"
+              type="button"
+              class="btn btn-inverse"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

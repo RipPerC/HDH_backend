@@ -1,0 +1,203 @@
+<div class="row animated fadeIn fast">
+  <div class="col-10">
+    <div class="card">
+      <div class="card-body">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search by title"
+          (keyup)="searchByTitle()"
+          [(ngModel)]="txtSearchByTitle"
+        />
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="card">
+      <div class="card-body">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search by year"
+          (keyup)="searchByYear()"
+          [(ngModel)]="txtSearchByYear"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="row animated fadeIn fast">
+    <div class="col-12">
+      <div class="alert alert-info text-center">
+        <h4 class="alert-heading">Loading info</h4>
+        <i class="fa fa-spin fa-refresh fa-2x"></i>
+        <p class="mb-0">Please wait</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row animated fadeIn fast">
+  <div class="col-6">
+    <div class="card">
+      <div class="text-center">
+        <a routerLink="new" class="btn btn-primary" title="New Film">
+          <i class="fa fa-file-movie-o"></i>
+          New Film
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-5">
+    <div class="card">
+      <div class="card-body text-right">
+        <span>Set items per page:</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-1">
+    <div class="card">
+      <div class="card-body">
+        <select
+          class="btn btn-secondary dropdown-toggle"
+          #txtPerPage
+          (change)="assignPerPage(txtPerPage.value)"
+        >
+          <option
+            *ngFor="let item of itemsPerPage"
+            [selected]="item === perPage"
+            [value]="item"
+          >
+            {{ item }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row animated fadeIn" *ngIf="!loading">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Films</h4>
+        <h6 class="card-subtitle">
+          List of registered films (total: {{ total }})
+        </h6>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered table-hover">
+            <thead>
+              <tr class="text-center">
+                <th class="w85">
+                  Year
+                  <img
+                    [src]="sortYear"
+                    class="w15 cursor"
+                    (click)="sortByYear()"
+                  />
+                </th>
+                <th>
+                  Title
+                  <img
+                    [src]="sortTitle"
+                    class="w15 cursor"
+                    (click)="sortByTitle()"
+                  />
+                </th>
+                <th class="w200">Director</th>
+                <th class="w75">Audio</th>
+                <th class="w75">Subtitle</th>
+                <th class="w75">Format</th>
+                <th class="w50">Downloaded</th>
+                <th class="text-nowrap w50">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let film of allFilms
+                    | paginate : { itemsPerPage: perPage, currentPage: pages }
+                "
+              >
+                <td class="text-center">
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.year"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.title"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.director"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.audio"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.subtitle"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="film.format"
+                  />
+                </td>
+                <td class="text-center">
+                  <select
+                    [(ngModel)]="film.downloaded"
+                    class="form-control"
+                    (change)="downloaded(film)"
+                  >
+                    <option [ngValue]="true">Yes</option>
+                    <option [ngValue]="false">No</option>
+                  </select>
+                </td>
+                <td class="text-nowrap text-center">
+                  <a
+                    data-toggle="tooltip"
+                    data-original-title="Edit"
+                    matTooltip="Edit"
+                    (click)="editFilm(film)"
+                  >
+                    <i class="fa fa-save text-inverse m-r-10"></i>
+                  </a>
+                  <a
+                    class="cursor"
+                    data-toggle="tooltip"
+                    data-original-title="Delete"
+                    matTooltip="Delete"
+                    (click)="deleteFilm(film)"
+                  >
+                    <i class="fa fa-close text-danger"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center">
+          <pagination-controls (pageChange)="pages = $event">
+          </pagination-controls>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
