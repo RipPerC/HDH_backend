@@ -1,19 +1,27 @@
-# HdH Backend
+# HdH Monorepo
 
-REST API for the HdH catalog, built with Java 21, Spring Boot 4.1.0, Spring MVC, Spring Data JPA, and PostgreSQL.
+HdH film and series catalog, organized as a monorepo with an Angular frontend and a Spring Boot REST API.
 
-For repository architecture, development commands, and contributor guidance, see [AGENTS.md](AGENTS.md).
+For shared repository conventions, see [AGENTS.md](AGENTS.md). Application-specific guidance is in [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AGENTS.md`](frontend/AGENTS.md).
 
-## Architecture
+## Repository layout
 
-The backend is a modular monolith. Features are grouped under `org.home.backend.catalog`; the film feature separates its web adapter, application service and output port from its Spring Data persistence adapter. Series and episode entities and repositories live in the series module. The application depends on persistence through the `FilmStore` port, not directly on Spring Data.
+| Directory | Contents |
+| --- | --- |
+| `backend/` | Java 21 / Spring Boot API, Maven wrapper, tests, Flyway migrations, and backend Dockerfile |
+| `frontend/` | Angular 14 application and frontend Dockerfile |
+| `docs/` | Repository-level plans and the Postman collection |
+| `compose.yaml` | Local database, backend, and optional frontend services |
 
-Angular is a separate application and container. It is not built into or served by this backend.
+The applications build and run independently. The backend remains a modular monolith; its film feature separates the web adapter, application service and output port from its Spring Data persistence adapter.
+
+The frontend was imported from [`RipPerC/HDH_frontend`](https://github.com/RipPerC/HDH_frontend) with its Git history. The `frontend-upstream` remote tracks its `dev` branch; to bring in future upstream changes, run `git fetch frontend-upstream` followed by `git subtree pull --prefix=frontend frontend-upstream dev`.
 
 ## Requirements
 
 - Java 21
 - Maven 3.9.16 (or use the included Maven wrapper)
+- Node.js 24 and npm for the existing Angular 14.2 application
 - Docker Engine with the Compose plugin for containerized development
 
 ## Configuration
@@ -31,15 +39,17 @@ Database and server settings are supplied through environment variables:
 | `OIDC_JWKS_URI` | required | Provider JWKS endpoint used to verify JWT signatures |
 | `OIDC_AUDIENCE` | required | Audience claim expected in API access tokens |
 
-Do not use the empty password default outside a local environment. Database schema changes are managed by Flyway migrations in `src/main/resources/db/migration`; Hibernate validates the schema at startup and does not modify it. For an existing `data` schema without Flyway history, startup baselines it and applies the initial idempotent migration, including sequences aligned to existing IDs.
+Do not use the empty password default outside a local environment. Database schema changes are managed by Flyway migrations in `backend/src/main/resources/db/migration`; Hibernate validates the schema at startup and does not modify it. For an existing `data` schema without Flyway history, startup baselines it and applies the initial idempotent migration, including sequences aligned to existing IDs.
 
 The OIDC values in `env/dev/.env` are examples only; replace them with values for a configured identity provider before using protected endpoints. The backend does not issue tokens or manage user accounts. Angular is a public client and must use OAuth 2.0 / OpenID Connect Authorization Code with PKCE; never put a client secret in browser code. After login, send the access token in `Authorization: Bearer <access-token>`. CORS only controls browser cross-origin access; it does not authenticate callers.
 
 ## Run with Docker Compose
 
+The imported Angular app does not yet include OIDC login or access-token handling. The backend protects `/v1/**`, so API operations from Angular return `401 Unauthorized` until authentication integration is implemented.
+
 The repository includes `env/dev/.env` for local development. Its password is a placeholder for local use only; replace it with a private value if needed and never reuse it outside a local environment.
 
-Build the executable JAR into the backend image and start it with PostgreSQL:
+Build the backend image and start it with PostgreSQL:
 
 ```shell
 docker compose --env-file env/dev/.env up --build -d
@@ -49,13 +59,13 @@ The backend is available at `http://localhost:8089`; its health endpoint is `htt
 
 Set `OIDC_ISSUER_URI`, `OIDC_JWKS_URI`, and `OIDC_AUDIENCE` in the Compose environment before starting the backend. The health endpoint remains public; all other API paths require a signed, unexpired token with the configured issuer and audience.
 
-To include Angular, first build its image separately and set `FRONTEND_IMAGE` in `.env` to that image. The frontend image must serve its static application on port 80 and be configured so the browser can reach the API at `http://localhost:8089/v1`. Then start the frontend profile:
+To also build and start Angular, enable the frontend profile. Compose builds the frontend image from `frontend/`; its web server serves the SPA and proxies `/v1` to the backend container:
 
 ```shell
 docker compose --env-file env/dev/.env --profile frontend up --build -d
 ```
 
-By default the frontend is published on `http://localhost:4200`, which is the default allowed CORS origin. For a different public origin, set `APP_CORS_ALLOWED_ORIGINS` in `.env` to that browser origin. The Compose frontend profile uses an already-built Angular image because this repository does not contain the frontend source or its Dockerfile.
+The frontend is published at `http://localhost:4200`. For a different browser origin, set `APP_CORS_ALLOWED_ORIGINS` in `env/dev/.env` to that origin. The frontend's API proxy uses the internal Compose service name and does not require exposing the backend hostname to the browser.
 
 Stop the services while retaining database data:
 
@@ -63,15 +73,40 @@ Stop the services while retaining database data:
 docker compose --env-file env/dev/.env down
 ```
 
-## Build the backend
+## Build and test the backend
 
-Create the executable JAR without running the tests (test work is tracked separately):
+Run the Maven wrapper from the backend directory:
 
 ```shell
+cd backend
 ./mvnw -DskipTests package
 ```
 
-On Windows, use `.\mvnw.cmd -DskipTests package`.
+On Windows, run `cd backend` followed by `.\mvnw.cmd -DskipTests package`.
+
+The complete test suite uses Testcontainers and requires Docker:
+
+```shell
+cd backend
+./mvnw test
+```
+
+On Windows, use `.\mvnw.cmd test`. Security and HTTP tests can run without PostgreSQL or Docker using `./mvnw -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test` (Windows: `.\mvnw.cmd -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`).
+
+## Build and test the frontend
+
+Run the Angular commands from `frontend/`:
+
+```shell
+cd frontend
+npm ci
+npm run build
+npm test -- --watch=false
+```
+
+The imported frontend currently contains no `*.spec.ts` files, so Karma discovers zero tests and exits unsuccessfully until frontend tests are added.
+
+For local development, start the backend and database with Compose, then run `npm start` in `frontend/`. The Angular development environment calls `http://localhost:8089/v1` directly; the production container uses the same-origin `/v1` proxy.
 
 ## API
 
@@ -113,13 +148,3 @@ An empty film list remains `204 No Content`; a film lookup or deletion for a mis
 Import [`docs/postman/HDH Backend.postman_collection.json`](docs/postman/HDH%20Backend.postman_collection.json) into Postman. Set `baseUrl` and `frontendOrigin`, then set `accessToken` to a valid access token from the configured test identity provider. The collection includes unauthenticated and invalid/expired token checks, CRUD requests, HTTP error cases, public health, and a CORS preflight request. Set `expiredToken` to an expired token issued by that provider to run the expiration case. Run the CRUD requests in order: creating a film stores its ID for the later get, update, and delete requests. The collection includes assertions for expected status codes and Problem Details responses.
 
 The API currently has no role-protected endpoint, so a 403 authorization decision is covered by automated tests for the configured forbidden-response handler rather than a Postman request.
-
-### Automated tests
-
-The tests require Docker to be running. `BackendApplicationTests` starts a disposable PostgreSQL 17 container with Testcontainers, runs the application context and Flyway migrations against it, then removes the container when the test class finishes. No local PostgreSQL setup or OIDC provider is needed:
-
-```shell
-./mvnw test
-```
-
-The security and HTTP behavior tests use a mocked JWT decoder and do not need the PostgreSQL container; run only those with `./mvnw -Dtest=JwtAudienceValidatorTests,ApiSecurityIntegrationTests test`.
