@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.net.URI;
+import java.util.List;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
@@ -32,6 +34,21 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode statusCode,
+            WebRequest request) {
+        HttpStatus status = HttpStatus.valueOf(statusCode.value());
+        ProblemDetail problem = createProblem(status, "Validation failed for request.", request);
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .toList();
+        problem.setProperty("errors", errors);
+        return handleExceptionInternal(ex, problem, headers, statusCode, request);
+    }
+
+    @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception exception,
             Object body,
@@ -42,7 +59,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         String detail = status.is5xxServerError()
                 ? "An unexpected error occurred."
                 : "The request could not be processed.";
-        ProblemDetail problem = createProblem(status, detail, request);
+        ProblemDetail problem = body instanceof ProblemDetail existingProblem
+                ? existingProblem
+                : createProblem(status, detail, request);
         return super.handleExceptionInternal(exception, problem, headers, statusCode, request);
     }
 

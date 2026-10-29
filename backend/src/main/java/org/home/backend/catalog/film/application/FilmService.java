@@ -2,10 +2,11 @@ package org.home.backend.catalog.film.application;
 
 import org.home.backend.catalog.film.application.port.out.FilmStore;
 import org.home.backend.catalog.film.domain.Film;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -18,17 +19,18 @@ public class FilmService {
     }
 
     public List<Film> getAllFilms() {
-        List<Film> films = new ArrayList<>(filmStore.findAll());
-        films.sort(Comparator.comparingInt(Film::getYear).thenComparing(Film::getTitle));
+        return filmStore.findAll(Sort.by(Sort.Order.asc("year").nullsLast(), Sort.Order.asc("title").nullsLast()));
+    }
 
-        return films;
+    public Page<Film> getAllFilms(Pageable pageable) {
+        return filmStore.findAll(pageable);
     }
 
     public Film getById(long id) {
         return filmStore.findById(id).orElse(null);
     }
 
-    public void createOrUpdateFilm(Film film){
+    public Film createOrUpdateFilm(Film film) {
         if (film.getDownloaded() == null) {
             film.setDownloaded(false);
         }
@@ -42,7 +44,7 @@ public class FilmService {
             film.setFormat(film.getFormat().toLowerCase());
         }
 
-        filmStore.save(film);
+        return filmStore.save(film);
     }
 
     public void deleteFilm(long id) {

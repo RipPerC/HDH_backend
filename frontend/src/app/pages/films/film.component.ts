@@ -25,22 +25,45 @@ export class FilmComponent implements OnInit {
 
   newData(): void {
     this.filmForm = this.fb.group({
-      year: ['', Validators.required],
-      title: ['', Validators.required],
-      downloaded: ['false'],
+      year: ['', [Validators.required, Validators.min(1888), Validators.max(2100)]],
+      title: ['', [Validators.required, Validators.maxLength(255)]],
+      downloaded: [false],
       audio: ['', Validators.maxLength(3)],
       subtitle: ['', Validators.maxLength(3)],
-      format: [],
-      director: [],
+      format: [''],
+      director: [''],
     });
   }
 
-  saveFilm() {
-    this.filmService
-      .updateOrCreateFilm(this.filmForm.value)
-      .subscribe((resp: any) => {
-        Swal.fire('Created');
+  saveFilm(): void {
+    if (this.filmForm.invalid) {
+      this.filmForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.filmForm.value;
+    const filmToSave: Film = {
+      ...formValue,
+      year: Number(formValue.year),
+      downloaded: formValue.downloaded === true || formValue.downloaded === 'true',
+    };
+
+    this.filmService.updateOrCreateFilm(filmToSave).subscribe({
+      next: (resp) => {
+        Swal.fire({
+          title: 'Success!',
+          text: `Film "${resp.title}" created successfully.`,
+          icon: 'success',
+        });
         this.newData();
-      });
+      },
+      error: (err) => {
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to create film. Please check input values.',
+          icon: 'error',
+        });
+      },
+    });
   }
 }

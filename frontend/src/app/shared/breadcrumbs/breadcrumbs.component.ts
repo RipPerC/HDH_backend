@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { ActivationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
@@ -15,10 +15,12 @@ export class BreadcrumbsComponent implements OnDestroy {
 
   constructor(private router: Router) {
     this.sectionTitleSubs$ = this.getDataRoute().subscribe(
-      ({ section, title }) => {
-        this.section = section;
-        this.title = title;
-        document.title = `HdH - ${title}`;
+      (data) => {
+        if (data) {
+          this.section = data['section'] ?? '';
+          this.title = data['title'] ?? '';
+          document.title = this.title ? `HdH - ${this.title}` : 'HdH';
+        }
       }
     );
   }
@@ -29,7 +31,7 @@ export class BreadcrumbsComponent implements OnDestroy {
 
   getDataRoute() {
     return this.router.events.pipe(
-      filter((event: any) => event instanceof ActivationEnd),
+      filter((event: any) => event instanceof ActivationEnd && event.snapshot.firstChild === null),
       map((event: ActivationEnd) => event.snapshot.data)
     );
   }
