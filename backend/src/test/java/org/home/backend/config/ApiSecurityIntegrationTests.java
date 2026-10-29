@@ -277,6 +277,56 @@ class ApiSecurityIntegrationTests {
                 .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 
+    @Test
+    void rejectsInvalidPayloadWithProblemDetails() throws Exception {
+        when(jwtDecoder.decode("valid")).thenReturn(jwt());
+
+        mockMvc.perform(post("/v1/film")
+                        .header("Authorization", "Bearer valid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":0,"title":"","director":"Director","year":1500,
+                                 "audio":"en","subtitle":"es","format":"digital","downloaded":false}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").isArray());
+    }
+
+    @Test
+    void returnsOkForFilmUpdateViaPut() throws Exception {
+        when(jwtDecoder.decode("valid")).thenReturn(jwt());
+        when(filmService.getById(7L)).thenReturn(new Film("Test", "Director", 2024, "EN", "ES", "digital", false));
+
+        mockMvc.perform(put("/v1/film/7")
+                        .header("Authorization", "Bearer valid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":7,"title":"Updated Title","director":"Director","year":2024,
+                                 "audio":"en","subtitle":"es","format":"digital","downloaded":false}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Title"));
+    }
+
+    @Test
+    void returnsNotFoundForFilmUpdateViaPutWhenMissing() throws Exception {
+        when(jwtDecoder.decode("valid")).thenReturn(jwt());
+        when(filmService.getById(99L)).thenReturn(null);
+
+        mockMvc.perform(put("/v1/film/99")
+                        .header("Authorization", "Bearer valid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":99,"title":"Updated Title","director":"Director","year":2024,
+                                 "audio":"en","subtitle":"es","format":"digital","downloaded":false}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
     private Jwt jwt() {
         Instant now = Instant.now();
         return new Jwt("valid", now, now.plusSeconds(300),

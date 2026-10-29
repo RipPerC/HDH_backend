@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Film } from '../pages/model/film.model';
 
@@ -13,15 +14,30 @@ export class FilmService {
 
   constructor(private http: HttpClient) {}
 
-  loadFilms() {
-    return this.http.get(this.url_films);
+  loadFilms(): Observable<Film[] | null> {
+    return this.http.get<Film[] | null>(this.url_films);
   }
 
-  deleteFilm(film: Film) {
-    return this.http.delete(`${this.url_films}/${film.id} `);
+  getFilmById(id: number): Observable<Film> {
+    return this.http.get<Film>(`${this.url_films}/${id}`);
   }
 
-  updateOrCreateFilm(film: Film) {
-    return this.http.post(this.url_films, film);
+  deleteFilm(film: Film): Observable<void> {
+    return this.http.delete<void>(`${this.url_films}/${film.id}`);
+  }
+
+  createFilm(film: Film): Observable<Film> {
+    return this.http.post<Film>(this.url_films, film);
+  }
+
+  updateFilm(id: number, film: Film): Observable<Film> {
+    return this.http.put<Film>(`${this.url_films}/${id}`, film);
+  }
+
+  updateOrCreateFilm(film: Film): Observable<Film> {
+    if (film.id && film.id > 0) {
+      return this.updateFilm(film.id, film);
+    }
+    return this.createFilm(film);
   }
 }

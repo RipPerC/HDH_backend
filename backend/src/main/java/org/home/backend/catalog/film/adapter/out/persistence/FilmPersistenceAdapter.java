@@ -2,6 +2,9 @@ package org.home.backend.catalog.film.adapter.out.persistence;
 
 import org.home.backend.catalog.film.application.port.out.FilmStore;
 import org.home.backend.catalog.film.domain.Film;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,6 +22,16 @@ public class FilmPersistenceAdapter implements FilmStore {
     @Override
     public List<Film> findAll() {
         return filmJpaRepository.findAll();
+    }
+
+    @Override
+    public List<Film> findAll(Sort sort) {
+        return filmJpaRepository.findAll(sort);
+    }
+
+    @Override
+    public Page<Film> findAll(Pageable pageable) {
+        return filmJpaRepository.findAll(pageable);
     }
 
     @Override

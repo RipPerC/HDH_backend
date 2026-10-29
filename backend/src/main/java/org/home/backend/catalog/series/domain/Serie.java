@@ -18,7 +18,7 @@ public class Serie {
     private Integer year;
     @Column(name = "DOWNLOADED")
     private Boolean downloaded;
-    @Column(name = "web")
+    @Column(name = "WEB")
     private String web;
     @OneToMany(mappedBy = "serie")
     private Set<Episode> listEpisodes;
@@ -92,6 +92,18 @@ public class Serie {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Serie other)) return false;
+        return id != 0 && id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public String toString() {
         return "Serie {" +
                 "id=" + id +
@@ -99,7 +111,6 @@ public class Serie {
                 ", year=" + year +
                 ", downloaded=" + downloaded +
                 ", web=" + web +
-                ", listEpisodes=" + listEpisodes +
                 '}';
     }
 }

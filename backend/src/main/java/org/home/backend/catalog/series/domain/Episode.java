@@ -92,10 +92,22 @@ public class Episode {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Episode other)) return false;
+        return id != 0 && id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public String toString() {
         return "Episode {" +
                 "id=" + id +
-                ", serie=" + serie +
+                ", serieId=" + (serie != null ? serie.getId() : null) +
                 ", season=" + season +
                 ", episode=" + episode +
                 ", audio='" + audio + '\'' +
